@@ -1,0 +1,38 @@
+import pandas as pd
+import numpy as np
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+import warnings
+warnings.filterwarnings('ignore')
+
+data = []
+data.append(pd.read_csv('yeast3.txt', delimiter='\t', header=None))
+
+
+df = pd.concat(data, ignore_index=True) 
+df = df.reset_index(drop=True)
+#df = df.drop(df[type(df) == str].index)
+#df = df.reset_index(drop=True)
+df = df.loc[0:314860, :]
+
+etichete = df[8].copy()
+date = df.drop(8, axis=1)
+#etichete=etichete.astype('int')
+print(etichete)
+date_antrenare, date_test, etichete_antrenare, etichete_testare = train_test_split(date, etichete, test_size = 0.15, random_state =12)
+scaler = StandardScaler()
+date_antrenare_p = scaler.fit_transform(date_antrenare)
+date_test_p = scaler.transform(date_test)
+
+
+acc = []
+for neuroni in [(10,10), (5,10), (10, 5), (10), (5), (5,5)]:
+    for rate in [0.1, 0.01]:
+        clf = MLPClassifier(hidden_layer_sizes=neuroni, learning_rate_init=rate)
+        pred = clf.fit(date_antrenare_p, etichete_antrenare)
+        etichete_estim = pred.predict(date_test_p)
+        acc.append(accuracy_score(etichete_estim, etichete_testare))
+
+print(acc)
